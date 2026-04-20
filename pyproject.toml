@@ -1,0 +1,29 @@
+[project]
+name = "back-end"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "polycahrpe",email = "polycahrpe@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12,<4.0"
+dependencies = [
+    "fastapi[standard] (>=0.135.3,<0.136.0)",
+    "taskipy (>=1.14.1,<2.0.0)",
+    "sqlmodel (>=0.0.37,<0.0.38)"
+]
+
+[tool.poetry]
+packages = [{include = "back_end", from = "src"}]
+
+[tool.taskipy.tasks]
+run = "fastapi dev src/main.py"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "pylint (>=4.0.5,<5.0.0)"
+]

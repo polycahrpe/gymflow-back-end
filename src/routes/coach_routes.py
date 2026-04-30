@@ -1,45 +1,26 @@
-from fastapi import APIRouter
-from ..models.entities.coach_entity import CoachRegister
+# from fastapi import APIRouter, Depends, status
+from .base_route import ( APIRouter, Depends, status )
+from ..models.database.session import get_session
+from ..controllers.coach_controller import CoachController
+from ..schemas.coach_schema import CoachCreateSchema, CoachResponseSchema
+from ..auth.dependencies import require_role
+
+coach_router = APIRouter(prefix="/coaches", tags=["coaches"])
 
 
-coach_router = APIRouter(
-    prefix="/coach",
-    tags=["coach"]
-)
+@coach_router.post("/signup", response_model=CoachResponseSchema, status_code=status.HTTP_201_CREATED)
+async def signup(data: CoachCreateSchema, session=Depends(get_session)):
+    controller = CoachController(session)
+    return controller.signup(data)
 
 
-
-@coach_router.get("/all")
-async def get_all():
-    return {
-        "message": "List of coach",
-        "coaches": [
-            {
-                "id": 1,
-                "name": "John Doe",
-                "email": "john.doe@example.com",
-                "phone": "1234567890"
-            },
-            
-            {
-                "id": 2,
-                "name": "Jane Smith",
-                "email": "jane.smith@example.com",
-                "phone": "0987654321"
-            },
-            
-        ]
-    }
-
-@coach_router.put("/update/{coach_id}")
-async def update(coach_id: int, coach: dict):
-    return {"message": f"Coach with ID {coach_id} updated", "Coach": coach}
-
-@coach_router.post("/register")
-async def register(coach: CoachRegister):
-    return {"message": "Coach registered successfully", "coach": coach}
+@coach_router.get("/all", response_model=list[CoachResponseSchema])
+async def get_all(session=Depends(get_session)):
+    controller = CoachController(session)
+    return controller.get_all()
 
 
-@coach_router.delete("/delete/{coach_id}")
-async def delete(coach_id: int):
-    return {"message": f"Coach with ID {coach_id} deleted"}
+@coach_router.patch("/activate/{coach_id}", response_model=CoachResponseSchema)
+async def activate(coach_id: str, session=Depends(get_session), _=Depends(require_role("admin"))):
+    controller = CoachController(session)
+    return controller.activate(coach_id)

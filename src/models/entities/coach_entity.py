@@ -1,27 +1,32 @@
-from .main_entity import (Field, SQLModel, field_validator, re)
+from .base_entity import ( Column, String, Boolean, Enum, uuid4, enum, mapped_column, relationship )
+from ..database.config import Base
+from sqlalchemy.orm import Mapped, relationship
 
 
-class CoachRegister(SQLModel):
-    email: str = Field(..., description="The email of the coach")
-    especiality: str = Field(..., description="The especiality of the coach")
+class CoachEspecialidade(str, enum.Enum):
+    musculacao = "musculacao"
+    crossfit = "crossfit"
+    yoga = "yoga"
+    pilates = "pilates"
+    natacao = "natacao"
+    funcional = "funcional"
 
-    @field_validator("email")
-    def validate_email(cls, value):
-        """Valida o campo `email` no cadastro do coach."""
-        if not value.strip():
-            raise ValueError("O email nao pode ser vazio.")
-        
-        if not re.match(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", value):
-            raise ValueError("O email nao e valido.")
-        
-        return value
 
-    @field_validator("especiality")
-    def validate_especiality(cls, value):
-        if not value.strip():
-            raise ValueError("A especialidade nao pode ser vazia.")
-        
-        if len(value) > 100:
-            raise ValueError("A especialidade nao pode exceder 100 caracteres.")
-        
-        return value
+class CoachGenero(str, enum.Enum):
+    masculino = "masculino"
+    feminino = "feminino"
+    outro = "outro"
+
+
+class CoachEntity(Base):
+    __tablename__ = "coaches"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
+    nome: Mapped[str] = mapped_column(String, nullable=False)
+    email: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    password: Mapped[str] = mapped_column(String, nullable=False)
+    especialidade: Mapped[CoachEspecialidade] = mapped_column(Enum(CoachEspecialidade), nullable=False)
+    genero: Mapped[CoachGenero] = mapped_column(Enum(CoachGenero), nullable=False)
+    ativo: Mapped[bool] = mapped_column(Boolean, default=False)  # False até o admin activar
+
+    students: Mapped[list["StudentEntity"]] = relationship("StudentEntity", back_populates="coach")

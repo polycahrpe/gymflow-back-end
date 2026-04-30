@@ -1,5 +1,13 @@
-from fastapi import APIRouter
-from ..models.entities.payment_plans_entity import PaymentPlanCreate
+from ..models.database.session import get_session
+from .base_route import APIRouter, Depends, status
+from ..controllers.payment_plans_controller import PaymentPlansController
+from ..schemas.payment_plans_schema import (
+    PaymentPlansCreateSchema,
+    PaymentPlansUpdateSchema,
+    PaymentPlansGetSchema,
+    PaymentPlansResponseSchema,
+)
+from ..auth.dependencies import require_role
 
 
 payment_plans_router = APIRouter(
@@ -7,35 +15,55 @@ payment_plans_router = APIRouter(
     tags=["payment-plans"]
 )
 
-@payment_plans_router.get("/all")
-async def get_all():
-    return {
-    "message": "List of all payment plans",
-    "plans": [
-            {"id": 1, "name": "Basic Plan", "price": 9.99},
-            {"id": 2, "name": "Standard Plan", "price": 19.99},
-            {"id": 3, "name": "Premium Plan", "price": 29.99}
-        ]   
-    } 
+
+@payment_plans_router.get("/all", response_model=list[PaymentPlansResponseSchema])
+async def get_all(
+                    session=Depends(get_session),
+                ):
+    
+    controller = PaymentPlansController(session)
+    return controller.get_all()
 
 
-@payment_plans_router.get("/details/{plan_id}")
-async def get_by_id(plan_id: int):
-    return {"message": f"Details of payment plan with ID {plan_id}"}    
+@payment_plans_router.get("/details/{plan_id}", response_model=PaymentPlansGetSchema)
+async def get_by_id(
+                        plan_id: str, 
+                        session=Depends(get_session),
+                    ):
+    
+    controller = PaymentPlansController(session)
+    return controller.get_by_id(plan_id)
 
 
-@payment_plans_router.post("/create")
-async def create(plan: PaymentPlanCreate):  
-    return {"message": "Payment plan created", "plan": plan}
+@payment_plans_router.post("/create", response_model=PaymentPlansResponseSchema, status_code=status.HTTP_201_CREATED)
+async def create(
+                    data: PaymentPlansCreateSchema, 
+                    session=Depends(get_session),
+                    _=Depends(require_role("admin"))
+                ):
+    
+    controller = PaymentPlansController(session)
+    return controller.create(data)
 
 
-@payment_plans_router.put("/update/{plan_id}")
-async def update(plan_id: int, plan: dict):
-    return {"message": f"Payment plan with ID {plan_id} updated", "plan": plan}
+@payment_plans_router.put("/update/{plan_id}", response_model=PaymentPlansResponseSchema)
+async def update(
+                    plan_id: str, 
+                    data: PaymentPlansUpdateSchema, 
+                    session=Depends(get_session),
+                    _=Depends(require_role("admin"))
+                ):
+    
+    controller = PaymentPlansController(session)
+    return controller.update(plan_id, data)
 
 
-@payment_plans_router.delete("/delete/{plan_id}")
-async def delete(plan_id: int):
-    return {"message": f"Payment plan with ID {plan_id} deleted"}       
-
-
+@payment_plans_router.delete("/delete/{plan_id}", status_code=status.HTTP_200_OK)
+async def delete(
+                    plan_id: str, 
+                    session=Depends(get_session),
+                    _=Depends(require_role("admin"))
+                ):
+    
+    controller = PaymentPlansController(session)
+    return controller.delete(plan_id)

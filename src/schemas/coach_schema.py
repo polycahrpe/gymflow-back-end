@@ -1,4 +1,5 @@
-from .base_schema import ( BaseModel, EmailStr, Optional, Enum, field_validator, re )
+from .base_schema import BaseModel, EmailStr, Optional, Enum, field_validator, re
+from .student_schema import StudentSummarySchema  # 👈
 
 
 class CoachEspecialidade(str, Enum):
@@ -46,6 +47,7 @@ class CoachResponseSchema(BaseModel):
     especialidade: CoachEspecialidade
     genero: CoachGenero
     ativo: bool
+    students: list[StudentSummarySchema] = []  # 👈 alunos sem coach dentro
 
     class Config:
         from_attributes = True

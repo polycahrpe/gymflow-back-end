@@ -17,7 +17,7 @@ class StudentEntity(Base):
     email: Mapped[str] = mapped_column(String, nullable=False, unique=True)
     password: Mapped[str] = mapped_column(String, nullable=False)
     genero: Mapped[StudentGenero] = mapped_column(Enum(StudentGenero), nullable=False)
-    ativo: Mapped[bool] = mapped_column(Boolean, default=False)
+    ativo: Mapped[bool] = mapped_column(Boolean, default=True)  # ← True agora
 
     # Relações
     coach_id: Mapped[str] = mapped_column(String, ForeignKey("coaches.id"), nullable=False)

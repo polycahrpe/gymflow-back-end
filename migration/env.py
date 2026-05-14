@@ -14,6 +14,7 @@ from src.models.entities.coach_entity import CoachEntity
 from src.models.entities.student_entity import StudentEntity
 from src.models.entities.payment_entity import PaymentEntity
 from src.models.entities.attendance_entity import AttendanceEntity
+from src.models.entities.access_code_entity import AccessCodeEntity
 
 
 from dotenv import load_dotenv

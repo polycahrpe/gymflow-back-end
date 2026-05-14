@@ -1,4 +1,5 @@
 from .base_repository import HTTPException, status, Session
+from sqlalchemy.orm import joinedload  # 👈
 from ..entities.coach_entity import CoachEntity
 from ...schemas.coach_schema import CoachCreateSchema
 import bcrypt
@@ -12,7 +13,12 @@ class CoachRepository:
         return self.session.query(CoachEntity).filter(CoachEntity.email == email).first()
 
     def get_by_id(self, id: str):
-        coach = self.session.query(CoachEntity).filter(CoachEntity.id == id).first()
+        coach = (
+            self.session.query(CoachEntity)
+            .options(joinedload(CoachEntity.students))  # 👈
+            .filter(CoachEntity.id == id)
+            .first()
+        )
         if not coach:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -21,7 +27,11 @@ class CoachRepository:
         return coach
 
     def get_all(self):
-        return self.session.query(CoachEntity).all()
+        return (
+            self.session.query(CoachEntity)
+            .options(joinedload(CoachEntity.students))  # 👈
+            .all()
+        )
 
     def hash_password(self, password: str) -> str:
         return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")

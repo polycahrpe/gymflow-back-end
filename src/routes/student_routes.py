@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, status
-from fastapi.responses import HTMLResponse
 from ..models.database.session import get_session
 from ..controllers.student_controller import StudentController
 from ..schemas.student_schema import (
@@ -19,26 +18,6 @@ student_router = APIRouter(prefix="/students", tags=["students"])
 async def signup(data: StudentCreateSchema, session=Depends(get_session)):
     controller = StudentController(session)
     return controller.signup(data)
-
-
-# ─────────────────────────────────────────
-# PÚBLICO — activar conta via link do email
-# ─────────────────────────────────────────
-@student_router.get("/activate/{token}", response_class=HTMLResponse)
-async def activate_by_token(token: str, session=Depends(get_session)):
-    controller = StudentController(session)
-    controller.activate_by_token(token)
-    return """
-    <html>
-      <body style="font-family: Arial, sans-serif; background: #f4f4f4; display: flex;
-                   justify-content: center; align-items: center; height: 100vh; margin: 0;">
-        <div style="background: white; padding: 40px; border-radius: 10px; text-align: center;">
-          <h2 style="color: #4CAF50;">✅ Conta activada com sucesso!</h2>
-          <p style="color: #555;">Já podes fazer login na aplicação GymFlow.</p>
-        </div>
-      </body>
-    </html>
-    """
 
 
 # ─────────────────────────────────────────
@@ -80,7 +59,7 @@ async def update(student_id: str, data: StudentUpdateSchema, session=Depends(get
 # ─────────────────────────────────────────
 # ADMIN — activar manualmente por ID
 # ─────────────────────────────────────────
-@student_router.patch("/activate/id/{student_id}", response_model=StudentResponseSchema)
+@student_router.patch("/activate/{student_id}", response_model=StudentResponseSchema)
 async def activate(student_id: str, session=Depends(get_session), _=Depends(require_role("admin"))):
     controller = StudentController(session)
     return controller.activate(student_id)
@@ -93,6 +72,15 @@ async def activate(student_id: str, session=Depends(get_session), _=Depends(requ
 async def deactivate(student_id: str, session=Depends(get_session), _=Depends(require_role("admin"))):
     controller = StudentController(session)
     return controller.deactivate(student_id)
+
+
+# ─────────────────────────────────────────
+# ADMIN — renovar plano do aluno
+# ─────────────────────────────────────────
+@student_router.patch("/renovar/{student_id}", response_model=StudentResponseSchema)
+async def renovar(student_id: str, session=Depends(get_session), _=Depends(require_role("admin"))):
+    controller = StudentController(session)
+    return controller.renovar(student_id)
 
 
 # ─────────────────────────────────────────

@@ -1,4 +1,5 @@
 from ..services.payment_service import PaymentService
+from ..schemas.payment_schema import PaymentCreateSchema, PaymentUpdateSchema
 
 
 class PaymentController:
@@ -14,10 +15,10 @@ class PaymentController:
     def get_by_id(self, payment_id: str):
         return self.service.get_payment_by_id(payment_id)
 
-    def create(self, data):
+    def create(self, data: PaymentCreateSchema):
         return self.service.create_payment(data)
 
-    def update(self, payment_id: str, data):
+    def update(self, payment_id: str, data: PaymentUpdateSchema):
         return self.service.update_payment(payment_id, data)
 
     def delete(self, payment_id: str):

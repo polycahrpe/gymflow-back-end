@@ -18,15 +18,13 @@ class PaymentEntity(Base):
     __tablename__ = "payments"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
-
     student_id: Mapped[str] = mapped_column(String(36), ForeignKey("students.id"), nullable=False)
     payment_plan_id: Mapped[str] = mapped_column(String(36), ForeignKey("planos_pagamento.id"), nullable=False)
-
     valor: Mapped[float] = mapped_column(Float, nullable=False)
     data_pagamento: Mapped[date] = mapped_column(Date, nullable=False)
     data_vencimento: Mapped[date] = mapped_column(Date, nullable=False)
     status: Mapped[PaymentStatus] = mapped_column(Enum(PaymentStatus), default=PaymentStatus.pendente)
     observacao: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
-    student: Mapped["StudentEntity"] = relationship("StudentEntity")
+    student: Mapped["StudentEntity"] = relationship("StudentEntity", back_populates="pagamentos")
     payment_plan: Mapped["PaymentPlanEntity"] = relationship("PaymentPlanEntity")

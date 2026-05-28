@@ -21,14 +21,14 @@ class StudentService:
     def update(self, student_id: str, data: StudentUpdateSchema):
         return self.repo.update(student_id, data)
 
-    def activate_by_token(self, token: str):
-        return self.repo.activate_by_token(token)
-
     def activate(self, student_id: str):
         return self.repo.activate(student_id)
 
     def deactivate(self, student_id: str):
         return self.repo.deactivate(student_id)
+
+    def renovar(self, student_id: str):
+        return self.repo.renovar(student_id)
 
     def delete(self, student_id: str):
         return self.repo.delete(student_id)

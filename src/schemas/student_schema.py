@@ -1,4 +1,6 @@
 from .base_schema import BaseModel, EmailStr, Optional, Enum, field_validator, re
+from datetime import datetime, date
+from typing import List
 
 
 class StudentGenero(str, Enum):
@@ -68,6 +70,19 @@ class PaymentPlanSummarySchema(BaseModel):
         from_attributes = True
 
 
+class PaymentSummarySchema(BaseModel):
+    id: str
+    payment_plan_id: str
+    valor: float
+    data_pagamento: date
+    data_vencimento: date
+    status: str
+    observacao: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
 class StudentResponseSchema(BaseModel):
     id: str
     nome: str
@@ -76,8 +91,12 @@ class StudentResponseSchema(BaseModel):
     ativo: bool
     coach_id: str
     payment_plan_id: str
+    data_inicio: Optional[datetime] = None
+    data_fim: Optional[datetime] = None
+    dias_restantes: int
     coach: Optional[CoachSummarySchema] = None
     payment_plan: Optional[PaymentPlanSummarySchema] = None
+    pagamentos: Optional[List[PaymentSummarySchema]] = []
 
     class Config:
         from_attributes = True
@@ -89,6 +108,9 @@ class StudentSummarySchema(BaseModel):
     email: EmailStr
     genero: StudentGenero
     ativo: bool
+    data_inicio: Optional[datetime] = None
+    data_fim: Optional[datetime] = None
+    dias_restantes: int
 
     class Config:
         from_attributes = True

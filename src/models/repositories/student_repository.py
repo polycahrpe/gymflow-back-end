@@ -5,6 +5,7 @@ from ..entities.student_entity import StudentEntity
 from ..entities.coach_entity import CoachEntity
 from ..entities.payment_plans_entity import PaymentPlanEntity
 from ...schemas.student_schema import StudentCreateSchema, StudentUpdateSchema
+from datetime import datetime, timedelta
 import bcrypt
 
 
@@ -20,7 +21,8 @@ class StudentRepository:
             self.session.query(StudentEntity)
             .options(
                 joinedload(StudentEntity.coach),
-                joinedload(StudentEntity.payment_plan)
+                joinedload(StudentEntity.payment_plan),
+                joinedload(StudentEntity.pagamentos)
             )
             .filter(StudentEntity.id == id)
             .first()
@@ -37,7 +39,8 @@ class StudentRepository:
             self.session.query(StudentEntity)
             .options(
                 joinedload(StudentEntity.coach),
-                joinedload(StudentEntity.payment_plan)
+                joinedload(StudentEntity.payment_plan),
+                joinedload(StudentEntity.pagamentos)
             )
             .all()
         )
@@ -47,7 +50,8 @@ class StudentRepository:
             self.session.query(StudentEntity)
             .options(
                 joinedload(StudentEntity.coach),
-                joinedload(StudentEntity.payment_plan)
+                joinedload(StudentEntity.payment_plan),
+                joinedload(StudentEntity.pagamentos)
             )
             .filter(StudentEntity.coach_id == coach_id)
             .all()
@@ -59,11 +63,14 @@ class StudentRepository:
     def verify_password(self, plain: str, hashed: str) -> bool:
         return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
 
-    # ─────────────────────────────────────────
-    # CREATE — valida código de acesso
-    # ─────────────────────────────────────────
+    def verificar_expiracao(self, student: StudentEntity) -> StudentEntity:
+        if student.ativo and student.data_fim and datetime.utcnow() >= student.data_fim:
+            student.ativo = False
+            self.session.commit()
+            self.session.refresh(student)
+        return student
+
     def create(self, data: StudentCreateSchema) -> StudentEntity:
-        # Valida e consome o código de acesso
         AccessCodeRepository(self.session).validate_and_consume(data.access_code)
 
         if self.get_by_email(data.email):
@@ -93,7 +100,9 @@ class StudentRepository:
             genero=data.genero,
             coach_id=data.coach_id,
             payment_plan_id=data.payment_plan_id,
-            ativo=True,  # activo directamente após código válido
+            data_inicio=None,
+            data_fim=None,
+            ativo=False,
         )
 
         self.session.add(student)
@@ -101,9 +110,6 @@ class StudentRepository:
         self.session.refresh(student)
         return student
 
-    # ─────────────────────────────────────────
-    # UPDATE
-    # ─────────────────────────────────────────
     def update(self, id: str, data: StudentUpdateSchema) -> StudentEntity:
         student = self.get_by_id(id)
 
@@ -132,43 +138,44 @@ class StudentRepository:
         self.session.refresh(student)
         return student
 
-    # ─────────────────────────────────────────
-    # ACTIVATE BY ID (admin)
-    # ─────────────────────────────────────────
+    def renovar(self, id: str) -> StudentEntity:
+        student = self.get_by_id(id)
+        plan = self.session.query(PaymentPlanEntity).filter(
+            PaymentPlanEntity.id == student.payment_plan_id
+        ).first()
+
+        student.data_inicio = datetime.utcnow()
+        student.data_fim = student.data_inicio + timedelta(days=plan.duracao_dias)
+        student.ativo = True
+
+        self.session.commit()
+        self.session.refresh(student)
+        return student
+
     def activate(self, id: str) -> StudentEntity:
         student = self.get_by_id(id)
-
         if student.ativo:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Aluno já está activo."
             )
-
         student.ativo = True
         self.session.commit()
         self.session.refresh(student)
         return student
 
-    # ─────────────────────────────────────────
-    # DEACTIVATE BY ID (admin)
-    # ─────────────────────────────────────────
     def deactivate(self, id: str) -> StudentEntity:
         student = self.get_by_id(id)
-
         if not student.ativo:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Aluno já está inactivo."
             )
-
         student.ativo = False
         self.session.commit()
         self.session.refresh(student)
         return student
 
-    # ─────────────────────────────────────────
-    # DELETE
-    # ─────────────────────────────────────────
     def delete(self, id: str) -> dict:
         student = self.get_by_id(id)
         self.session.delete(student)

@@ -1,4 +1,4 @@
-from .base_schema import BaseModel, uuid4, Optional, field_validator
+from .base_schema import BaseModel, Optional, field_validator
 from datetime import date
 from enum import Enum
 
@@ -40,6 +40,27 @@ class PaymentUpdateSchema(BaseModel):
         return valor
 
 
+class StudentInfoSchema(BaseModel):
+    id: str
+    nome: str
+    email: str
+    genero: str
+    ativo: bool
+
+    class Config:
+        from_attributes = True
+
+
+class PaymentPlanInfoSchema(BaseModel):
+    id: str
+    nome: str
+    preco: float
+    duracao_dias: int
+
+    class Config:
+        from_attributes = True
+
+
 class PaymentResponseSchema(BaseModel):
     id: str
     student_id: str
@@ -49,6 +70,8 @@ class PaymentResponseSchema(BaseModel):
     data_vencimento: date
     status: PaymentStatusSchema
     observacao: Optional[str] = None
+    student: Optional[StudentInfoSchema] = None
+    payment_plan: Optional[PaymentPlanInfoSchema] = None
 
     class Config:
         from_attributes = True

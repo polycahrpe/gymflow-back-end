@@ -4,7 +4,7 @@ from .payment_plans_routes import payment_plans_router
 from .coach_routes import coach_router
 from .student_routes import student_router
 from ..auth.login_route import login_router
-from .payment_route import payment_router
+from .payment_routes import payment_router
 from .attendance_route import attendance_router
 from .access_code_routes import access_code_router
 

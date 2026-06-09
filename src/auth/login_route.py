@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from ..models.database.session import get_session
 from ..models.repositories.user_repository import UserRepository
 from ..models.repositories.student_repository import StudentRepository
+from ..models.repositories.attendance_repository import AttendanceRepository
 from ..schemas.user_schema import UserLoginSchema
 from .jwt import create_access_token
 
@@ -69,6 +70,11 @@ async def login(data: UserLoginSchema, session=Depends(get_session)):
         # Busca todos os alunos do mesmo coach
         alunos_do_coach = student_repo.get_by_coach(student.coach_id)
 
+        # Busca presenças
+        attendance_repo = AttendanceRepository(session)
+        presenca_hoje = attendance_repo.get_today_by_student(student.id)
+        presencas = attendance_repo.get_by_student(student.id)
+
         token = create_access_token({"sub": student.id, "role": "student"})
         return {
             "access_token": token,
@@ -122,6 +128,27 @@ async def login(data: UserLoginSchema, session=Depends(get_session)):
                         "observacao": p.observacao,
                     }
                     for p in student.pagamentos
+                ],
+                "presenca_hoje": {
+                    "id": presenca_hoje.id,
+                    "data": presenca_hoje.data,
+                    "hora_entrada": presenca_hoje.hora_entrada,
+                    "hora_saida": presenca_hoje.hora_saida,
+                    "status": presenca_hoje.status,
+                    "confirmado_entrada_em": presenca_hoje.confirmado_entrada_em,
+                    "confirmado_saida_em": presenca_hoje.confirmado_saida_em,
+                } if presenca_hoje else None,
+                "presencas": [
+                    {
+                        "id": p.id,
+                        "data": p.data,
+                        "hora_entrada": p.hora_entrada,
+                        "hora_saida": p.hora_saida,
+                        "status": p.status,
+                        "confirmado_entrada_em": p.confirmado_entrada_em,
+                        "confirmado_saida_em": p.confirmado_saida_em,
+                    }
+                    for p in presencas
                 ]
             }
         }

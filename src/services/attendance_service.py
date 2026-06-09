@@ -1,5 +1,5 @@
 from ..models.repositories.attendance_repository import AttendanceRepository
-from ..schemas.attendance_schema import AttendanceConfirmSchema
+from ..schemas.attendance_schema import AttendanceMarkEntrySchema, AttendanceMarkExitSchema
 
 
 class AttendanceService:
@@ -12,21 +12,20 @@ class AttendanceService:
     def get_attendances_by_student(self, student_id: str):
         return self.repo.get_by_student(student_id)
 
+    def get_today_by_student(self, student_id: str):
+        return self.repo.get_today_by_student(student_id)
+
     def get_attendance_by_id(self, attendance_id: str):
         return self.repo.get_by_id(attendance_id)
 
-    # Aluno → gera QR de entrada ao fazer login
-    def generate_entry_qr(self, student_id: str):
-        return self.repo.generate_entry_qr(student_id)
+    def mark_entry(self, data: AttendanceMarkEntrySchema):
+        return self.repo.mark_entry(data)
 
-    # Admin → confirma entrada via token do QR
-    def confirm_entry(self, data: AttendanceConfirmSchema):
-        return self.repo.confirm_entry(data.token)
+    def confirm_entry(self, attendance_id: str):
+        return self.repo.confirm_entry(attendance_id)
 
-    # Aluno → gera QR de saída ao querer sair
-    def generate_exit_qr(self, student_id: str):
-        return self.repo.generate_exit_qr(student_id)
+    def mark_exit(self, data: AttendanceMarkExitSchema):
+        return self.repo.mark_exit(data)
 
-    # Admin → confirma saída via token do QR
-    def confirm_exit(self, data: AttendanceConfirmSchema):
-        return self.repo.confirm_exit(data.token)
+    def confirm_exit(self, attendance_id: str):
+        return self.repo.confirm_exit(attendance_id)

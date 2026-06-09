@@ -10,40 +10,38 @@ class AttendanceStatusSchema(str, Enum):
     saiu             = "saiu"
 
 
-# ─────────────────────────────────────────
-# Resposta do QR code gerado (entrada ou saída)
-# ─────────────────────────────────────────
-class AttendanceQRSchema(BaseModel):
-    attendance_id: str
-    token: str
-    token_expira_em: datetime
-    status: AttendanceStatusSchema
+class AttendanceMarkEntrySchema(BaseModel):
+    student_id: str
+    data: date
+    hora_entrada: time
+
+
+class AttendanceMarkExitSchema(BaseModel):
+    student_id: str
+    hora_saida: time
+
+
+class StudentAttendanceSummarySchema(BaseModel):
+    id: str
+    nome: str
+    email: str
+    genero: str
+    ativo: bool
 
     class Config:
         from_attributes = True
 
 
-# ─────────────────────────────────────────
-# Resposta completa de uma presença
-# ─────────────────────────────────────────
 class AttendanceResponseSchema(BaseModel):
     id: str
     student_id: str
-    token: str
-    token_expira_em: datetime
     data: date
     hora_entrada: Optional[time] = None
     hora_saida: Optional[time] = None
     status: AttendanceStatusSchema
     confirmado_entrada_em: Optional[datetime] = None
     confirmado_saida_em: Optional[datetime] = None
+    student: Optional[StudentAttendanceSummarySchema] = None
 
     class Config:
         from_attributes = True
-
-
-# ─────────────────────────────────────────
-# Payload que o admin envia para confirmar (token do QR)
-# ─────────────────────────────────────────
-class AttendanceConfirmSchema(BaseModel):
-    token: str

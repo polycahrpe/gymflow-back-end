@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from ..models.database.session import get_session
 from ..models.repositories.user_repository import UserRepository
 from ..models.repositories.student_repository import StudentRepository
+from ..models.repositories.coach_repository import CoachRepository
 from ..models.repositories.attendance_repository import AttendanceRepository
 from ..schemas.user_schema import UserLoginSchema
 from .jwt import create_access_token
@@ -12,7 +13,7 @@ login_router = APIRouter(prefix="/auth", tags=["auth"])
 @login_router.post("/login")
 async def login(data: UserLoginSchema, session=Depends(get_session)):
 
-    # 1. Tenta encontrar em users (admin, coach)
+    # 1. Tenta encontrar em users (admin)
     user_repo = UserRepository(session)
     user = user_repo.get_by_email(data.email)
 
@@ -40,7 +41,73 @@ async def login(data: UserLoginSchema, session=Depends(get_session)):
             }
         }
 
-    # 2. Tenta encontrar em students
+    # 2. Tenta encontrar em coaches
+    coach_repo = CoachRepository(session)
+    coach = coach_repo.get_by_email(data.email)
+
+    if coach:
+        if not coach_repo.verify_password(data.password, coach.password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Email ou password incorrectos."
+            )
+        if not coach.ativo:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="A tua conta ainda não foi aprovada. Aguarda a aprovação do administrador."
+            )
+
+        student_repo = StudentRepository(session)
+        alunos = student_repo.get_by_coach(coach.id)
+
+        token = create_access_token({"sub": coach.id, "role": "coach"})
+        return {
+            "access_token": token,
+            "token_type": "bearer",
+            "user": {
+                "id": coach.id,
+                "nome": coach.nome,
+                "email": coach.email,
+                "role": "coach",
+                "ativo": coach.ativo,
+                "especialidade": coach.especialidade,
+                "experiencias": [e.nome for e in coach.experiencias],
+                "genero": coach.genero,
+                "alunos": [
+                    {
+                        "id": s.id,
+                        "nome": s.nome,
+                        "email": s.email,
+                        "genero": s.genero,
+                        "ativo": s.ativo,
+                        "dias_restantes": s.dias_restantes,
+                        "data_inicio": s.data_inicio,
+                        "data_fim": s.data_fim,
+                        "payment_plan": {
+                            "id": s.payment_plan.id,
+                            "nome": s.payment_plan.nome,
+                            "preco": s.payment_plan.preco,
+                            "duracao_dias": s.payment_plan.duracao_dias,
+                            "ativo": s.payment_plan.ativo,
+                        } if s.payment_plan else None,
+                        "pagamentos": [
+                            {
+                                "id": p.id,
+                                "valor": p.valor,
+                                "data_pagamento": p.data_pagamento,
+                                "data_vencimento": p.data_vencimento,
+                                "status": p.status,
+                                "observacao": p.observacao,
+                            }
+                            for p in s.pagamentos
+                        ]
+                    }
+                    for s in alunos
+                ]
+            }
+        }
+
+    # 3. Tenta encontrar em students
     student_repo = StudentRepository(session)
     student = student_repo.get_by_email(data.email)
 
@@ -51,7 +118,6 @@ async def login(data: UserLoginSchema, session=Depends(get_session)):
                 detail="Email ou password incorrectos."
             )
 
-        # Verifica se o plano expirou
         student = student_repo.verificar_expiracao(student)
 
         if not student.ativo:
@@ -67,10 +133,8 @@ async def login(data: UserLoginSchema, session=Depends(get_session)):
                 detail=detail
             )
 
-        # Busca todos os alunos do mesmo coach
         alunos_do_coach = student_repo.get_by_coach(student.coach_id)
 
-        # Busca presenças
         attendance_repo = AttendanceRepository(session)
         presenca_hoje = attendance_repo.get_today_by_student(student.id)
         presencas = attendance_repo.get_by_student(student.id)
@@ -96,6 +160,7 @@ async def login(data: UserLoginSchema, session=Depends(get_session)):
                     "nome": student.coach.nome,
                     "email": student.coach.email,
                     "especialidade": student.coach.especialidade,
+                    "experiencias": [e.nome for e in student.coach.experiencias],
                     "genero": student.coach.genero,
                     "ativo": student.coach.ativo,
                     "alunos": [
@@ -153,7 +218,7 @@ async def login(data: UserLoginSchema, session=Depends(get_session)):
             }
         }
 
-    # 3. Não encontrado em nenhuma tabela
+    # 4. Não encontrado em nenhuma tabela
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Email ou password incorrectos."

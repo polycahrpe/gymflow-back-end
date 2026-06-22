@@ -31,4 +31,8 @@ class AttendanceEntity(Base):
     confirmado_entrada_em: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     confirmado_saida_em: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
-    student: Mapped["StudentEntity"] = relationship("StudentEntity", lazy="selectin")
+    student: Mapped["StudentEntity"] = relationship(
+        "StudentEntity",
+        back_populates="attendances",
+        lazy="selectin"
+    )

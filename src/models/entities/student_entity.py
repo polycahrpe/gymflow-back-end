@@ -30,7 +30,20 @@ class StudentEntity(Base):
 
     coach: Mapped["CoachEntity"] = relationship("CoachEntity", back_populates="students")
     payment_plan: Mapped["PaymentPlanEntity"] = relationship("PaymentPlanEntity", back_populates="students")
-    pagamentos: Mapped[List["PaymentEntity"]] = relationship("PaymentEntity", back_populates="student", lazy="selectin")
+
+    pagamentos: Mapped[List["PaymentEntity"]] = relationship(
+        "PaymentEntity",
+        back_populates="student",
+        lazy="selectin",
+        cascade="all, delete-orphan"
+    )
+
+    attendances: Mapped[List["AttendanceEntity"]] = relationship(
+        "AttendanceEntity",
+        back_populates="student",
+        lazy="selectin",
+        cascade="all, delete-orphan"
+    )
 
     @property
     def dias_restantes(self) -> int:

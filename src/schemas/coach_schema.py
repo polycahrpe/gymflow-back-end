@@ -1,5 +1,6 @@
 from .base_schema import BaseModel, EmailStr, Optional, Enum, field_validator, re
-from .student_schema import StudentSummarySchema  # 👈
+from typing import List
+from datetime import datetime
 
 
 class CoachEspecialidade(str, Enum):
@@ -9,6 +10,23 @@ class CoachEspecialidade(str, Enum):
     pilates = "pilates"
     natacao = "natacao"
     funcional = "funcional"
+
+
+class CoachExperiencia(str, Enum):
+    musculacao = "musculacao"
+    crossfit = "crossfit"
+    yoga = "yoga"
+    pilates = "pilates"
+    natacao = "natacao"
+    funcional = "funcional"
+    boxe = "boxe"
+    artes_marciais = "artes_marciais"
+    spinning = "spinning"
+    zumba = "zumba"
+    calistenia = "calistenia"
+    alongamento = "alongamento"
+    atletismo = "atletismo"
+    nutricao_esportiva = "nutricao_esportiva"
 
 
 class CoachGenero(str, Enum):
@@ -22,7 +40,9 @@ class CoachCreateSchema(BaseModel):
     email: EmailStr
     password: str
     especialidade: CoachEspecialidade
+    experiencias: List[CoachExperiencia] = []
     genero: CoachGenero
+    access_code: str
 
     @field_validator("nome")
     def validate_nome(cls, v):
@@ -39,15 +59,64 @@ class CoachCreateSchema(BaseModel):
             raise ValueError("Password deve ter pelo menos 6 caracteres.")
         return v
 
+    @field_validator("access_code")
+    def validate_access_code(cls, v):
+        if len(v) != 7 or not v.isalnum():
+            raise ValueError("O código de acesso deve ter exactamente 7 caracteres alfanuméricos.")
+        return v.upper()
+
+
+class CoachUpdateSchema(BaseModel):
+    nome: Optional[str] = None
+    especialidade: Optional[CoachEspecialidade] = None
+    experiencias: Optional[List[CoachExperiencia]] = None
+    genero: Optional[CoachGenero] = None
+
+
+class CoachExperienciaResponseSchema(BaseModel):
+    id: str
+    nome: str
+
+    class Config:
+        from_attributes = True
+
+
+class StudentSummaryForCoachSchema(BaseModel):
+    id: str
+    nome: str
+    email: EmailStr
+    genero: str
+    ativo: bool
+    dias_restantes: int
+    data_inicio: Optional[datetime] = None
+    data_fim: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
 
 class CoachResponseSchema(BaseModel):
     id: str
     nome: str
     email: EmailStr
     especialidade: CoachEspecialidade
+    experiencias: List[CoachExperienciaResponseSchema]
     genero: CoachGenero
     ativo: bool
-    students: list[StudentSummarySchema] = []  # 👈 alunos sem coach dentro
+
+    class Config:
+        from_attributes = True
+
+
+class CoachDetailResponseSchema(BaseModel):
+    id: str
+    nome: str
+    email: EmailStr
+    especialidade: CoachEspecialidade
+    experiencias: List[CoachExperienciaResponseSchema]
+    genero: CoachGenero
+    ativo: bool
+    students: List[StudentSummaryForCoachSchema] = []  # nome correcto da relação
 
     class Config:
         from_attributes = True

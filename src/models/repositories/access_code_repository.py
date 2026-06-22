@@ -5,24 +5,18 @@ import string
 
 
 def _generate_code() -> str:
-    return ''.join(random.choices(string.digits, k=5))
+    characters = string.ascii_uppercase + string.digits
+    return ''.join(random.choices(characters, k=7))
 
 
 class AccessCodeRepository:
     def __init__(self, session: Session):
         self.session = session
 
-    # ─────────────────────────────────────────
-    # GET ALL
-    # ─────────────────────────────────────────
     def get_all(self):
         return self.session.query(AccessCodeEntity).all()
 
-    # ─────────────────────────────────────────
-    # GENERATE — admin gera um código único
-    # ─────────────────────────────────────────
     def generate(self) -> AccessCodeEntity:
-        # Garante que o código é único
         for _ in range(10):
             code = _generate_code()
             existing = self.session.query(AccessCodeEntity).filter(
@@ -43,12 +37,9 @@ class AccessCodeRepository:
         self.session.refresh(access_code)
         return access_code
 
-    # ─────────────────────────────────────────
-    # VALIDATE — valida e marca como usado
-    # ─────────────────────────────────────────
     def validate_and_consume(self, code: str) -> bool:
         access_code = self.session.query(AccessCodeEntity).filter(
-            AccessCodeEntity.code == code,
+            AccessCodeEntity.code == code.upper(),
             AccessCodeEntity.usado == False
         ).first()
 

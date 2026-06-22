@@ -35,9 +35,9 @@ class StudentCreateSchema(BaseModel):
 
     @field_validator("access_code")
     def validate_access_code(cls, v):
-        if not v.isdigit() or len(v) != 5:
-            raise ValueError("O código de acesso deve ter exactamente 5 dígitos.")
-        return v
+        if len(v) != 7 or not v.isalnum():
+            raise ValueError("O código de acesso deve ter exactamente 7 caracteres alfanuméricos.")
+        return v.upper()
 
 
 class StudentUpdateSchema(BaseModel):
@@ -47,11 +47,20 @@ class StudentUpdateSchema(BaseModel):
     payment_plan_id: Optional[str] = None
 
 
+class CoachExperienciaSummarySchema(BaseModel):
+    id: str
+    nome: str
+
+    class Config:
+        from_attributes = True
+
+
 class CoachSummarySchema(BaseModel):
     id: str
     nome: str
     email: EmailStr
     especialidade: str
+    experiencias: List[CoachExperienciaSummarySchema] = []
     genero: str
     ativo: bool
 

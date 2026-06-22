@@ -9,6 +9,7 @@ from src.models.database.config import Base
 
 from src.models.entities.payment_plans_entity import PaymentPlanEntity
 from src.models.entities.payment_plan_exercise_entity import PaymentPlanExerciseEntity
+from src.models.entities.coach_experiencia_entity import CoachExperienciaEntity
 from src.models.entities.user_entity import UserEntity
 from src.models.entities.coach_entity import CoachEntity
 from src.models.entities.student_entity import StudentEntity

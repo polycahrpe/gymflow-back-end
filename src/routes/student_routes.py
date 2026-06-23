@@ -33,7 +33,7 @@ async def get_all(session=Depends(get_session), _=Depends(require_role("admin"))
 # ADMIN — buscar aluno por ID
 # ─────────────────────────────────────────
 @student_router.get("/details/{student_id}", response_model=StudentResponseSchema)
-async def get_by_id(student_id: str, session=Depends(get_session), _=Depends(require_role("admin"))):
+async def get_by_id(student_id: str, session=Depends(get_session), _=Depends(require_role("admin", "coach"))):
     controller = StudentController(session)
     return controller.get_by_id(student_id)
 

@@ -16,6 +16,8 @@ from src.models.entities.student_entity import StudentEntity
 from src.models.entities.payment_entity import PaymentEntity
 from src.models.entities.attendance_entity import AttendanceEntity
 from src.models.entities.access_code_entity import AccessCodeEntity
+from src.models.entities.workout_exercise_entity import WorkoutExerciseEntity
+from src.models.entities.workout_plan_entity import WorkoutPlanEntity
 
 
 from dotenv import load_dotenv

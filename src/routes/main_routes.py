@@ -7,6 +7,7 @@ from ..auth.login_route import login_router
 from .payment_routes import payment_router
 from .attendance_route import attendance_router
 from .access_code_routes import access_code_router
+from .workout_plan_routes import workout_plan_router
 
 main_routes = APIRouter()
 
@@ -17,4 +18,5 @@ main_routes.include_router(student_router)
 main_routes.include_router(payment_router)
 main_routes.include_router(attendance_router)
 main_routes.include_router(access_code_router)
+main_routes.include_router(workout_plan_router)
 main_routes.include_router(payment_plans_router)
